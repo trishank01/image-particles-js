@@ -17,7 +17,7 @@ const ParticleHoverEffect = ({ imageUrl }) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Set dynamic width & height based on parent container
+    // Make canvas fully responsive
     const resizeCanvas = () => {
       const parent = canvas.parentElement;
       canvas.width = parent.clientWidth;
@@ -26,7 +26,7 @@ const ParticleHoverEffect = ({ imageUrl }) => {
     };
 
     window.addEventListener("resize", resizeCanvas);
-    resizeCanvas(); // Initial call
+    resizeCanvas(); // Initial setup
     return () => window.removeEventListener("resize", resizeCanvas);
   }, [imageUrl]);
 
@@ -47,19 +47,29 @@ const ParticleHoverEffect = ({ imageUrl }) => {
     const offCtx = offscreenCanvas.getContext("2d");
     if (!offCtx) return;
 
-    offscreenCanvas.width = image.width;
-    offscreenCanvas.height = image.height;
-    offCtx.drawImage(image, 0, 0);
+    // Scale image to fit in the center
+    const aspectRatio = image.width / image.height;
+    let imgWidth = canvas.width;
+    let imgHeight = canvas.width / aspectRatio;
 
-    const imageData = offCtx.getImageData(0, 0, image.width, image.height);
+    if (imgHeight > canvas.height) {
+      imgHeight = canvas.height;
+      imgWidth = canvas.height * aspectRatio;
+    }
+
+    const startX = (canvas.width - imgWidth) / 2;
+    const startY = (canvas.height - imgHeight) / 2;
+
+    offscreenCanvas.width = imgWidth;
+    offscreenCanvas.height = imgHeight;
+    offCtx.drawImage(image, 0, 0, imgWidth, imgHeight);
+
+    const imageData = offCtx.getImageData(0, 0, imgWidth, imgHeight);
     const data = imageData.data;
 
-    const scaleX = canvas.width / image.width;
-    const scaleY = canvas.height / image.height;
-
-    for (let y = 0; y < image.height; y += spacing) {
-      for (let x = 0; x < image.width; x += spacing) {
-        const index = (y * image.width + x) * 4;
+    for (let y = 0; y < imgHeight; y += spacing) {
+      for (let x = 0; x < imgWidth; x += spacing) {
+        const index = (y * imgWidth + x) * 4;
         const r = data[index];
         const g = data[index + 1];
         const b = data[index + 2];
@@ -67,10 +77,10 @@ const ParticleHoverEffect = ({ imageUrl }) => {
 
         if (alpha > 128) {
           particles.push({
-            x: x * scaleX,
-            y: y * scaleY,
-            originalX: x * scaleX,
-            originalY: y * scaleY,
+            x: startX + x,
+            y: startY + y,
+            originalX: startX + x,
+            originalY: startY + y,
             vx: 0,
             vy: 0,
             color: `rgb(${r},${g},${b})`,
@@ -130,7 +140,11 @@ const ParticleHoverEffect = ({ imageUrl }) => {
 
   return (
     <div style={{ width: "100%", height: "100%", overflow: "hidden" }}>
-      <canvas ref={canvasRef} onMouseMove={handleMouseMove} />
+      <canvas
+        ref={canvasRef}
+        onMouseMove={handleMouseMove}
+        style={{ background: "transparent" }}
+      />
     </div>
   );
 };
