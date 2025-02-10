@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
-const ParticleHoverEffect = ({ width = 400, height = 400, imageUrl }) => {
+const ParticleHoverEffect = ({ imageUrl }) => {
   const canvasRef = useRef(null);
   let particles = [];
 
@@ -17,20 +17,31 @@ const ParticleHoverEffect = ({ width = 400, height = 400, imageUrl }) => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    canvas.width = width;
-    canvas.height = height;
+    // Set dynamic width & height based on parent container
+    const resizeCanvas = () => {
+      const parent = canvas.parentElement;
+      canvas.width = parent.clientWidth;
+      canvas.height = parent.clientHeight;
+      loadImageAndExtractParticles(ctx, canvas);
+    };
 
+    window.addEventListener("resize", resizeCanvas);
+    resizeCanvas(); // Initial call
+    return () => window.removeEventListener("resize", resizeCanvas);
+  }, [imageUrl]);
+
+  const loadImageAndExtractParticles = (ctx, canvas) => {
     const img = new Image();
-    img.crossOrigin = "anonymous"; // Fix CORS issue
+    img.crossOrigin = "anonymous";
     img.src = imageUrl;
     img.onload = () => {
       extractParticles(img, ctx, canvas);
       animate();
     };
-  }, [width, height, imageUrl]); // Runs when dimensions or image change
+  };
 
   const extractParticles = (image, ctx, canvas) => {
-    particles = []; // Reset particles
+    particles = [];
 
     const offscreenCanvas = document.createElement("canvas");
     const offCtx = offscreenCanvas.getContext("2d");
@@ -118,15 +129,9 @@ const ParticleHoverEffect = ({ width = 400, height = 400, imageUrl }) => {
   };
 
   return (
-    <canvas
-      ref={canvasRef}
-      onMouseMove={handleMouseMove}
-      style={{
-        display: "block",
-        width: `${width}px`,
-        height: `${height}px`,
-      }}
-    />
+    <div style={{ width: "100%", height: "100%", overflow: "hidden" }}>
+      <canvas ref={canvasRef} onMouseMove={handleMouseMove} />
+    </div>
   );
 };
 
