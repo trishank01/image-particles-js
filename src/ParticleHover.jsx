@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
-const ParticleHoverEffect = ({ imageUrl }) => {
+const ParticleHoverEffect = ({ imageUrl, scale = 1.8 }) => {
   const canvasRef = useRef(null);
   let particles = [];
 
@@ -28,7 +28,7 @@ const ParticleHoverEffect = ({ imageUrl }) => {
     window.addEventListener("resize", resizeCanvas);
     resizeCanvas(); // Initial setup
     return () => window.removeEventListener("resize", resizeCanvas);
-  }, [imageUrl]);
+  }, [imageUrl, scale]);
 
   const loadImageAndExtractParticles = (ctx, canvas) => {
     const img = new Image();
@@ -47,15 +47,19 @@ const ParticleHoverEffect = ({ imageUrl }) => {
     const offCtx = offscreenCanvas.getContext("2d");
     if (!offCtx) return;
 
-    // Scale image to fit in the center
+    // Scale image properly
     const aspectRatio = image.width / image.height;
-    let imgWidth = canvas.width;
-    let imgHeight = canvas.width / aspectRatio;
+    let imgWidth = canvas.width * scale;
+    let imgHeight = imgWidth / aspectRatio;
 
-    if (imgHeight > canvas.height) {
-      imgHeight = canvas.height;
-      imgWidth = canvas.height * aspectRatio;
+    if (imgHeight > canvas.height * scale) {
+      imgHeight = canvas.height * scale;
+      imgWidth = imgHeight * aspectRatio;
     }
+
+    // Ensure the image fits inside the canvas
+    imgWidth = Math.min(imgWidth, canvas.width);
+    imgHeight = Math.min(imgHeight, canvas.height);
 
     const startX = (canvas.width - imgWidth) / 2;
     const startY = (canvas.height - imgHeight) / 2;
@@ -139,11 +143,11 @@ const ParticleHoverEffect = ({ imageUrl }) => {
   };
 
   return (
-    <div style={{ width: "100%", height: "100%", overflow: "hidden" }}>
+    <div style={{ width: "500px", height: "100%", overflow: "hidden" }}>
       <canvas
         ref={canvasRef}
         onMouseMove={handleMouseMove}
-        style={{ background: "#022A30" }}
+        style={{ background: "transparent" }} // Transparent background
       />
     </div>
   );
