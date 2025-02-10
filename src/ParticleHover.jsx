@@ -143,7 +143,7 @@ const ParticleHoverEffect = ({ imageUrl }) => {
       <canvas
         ref={canvasRef}
         onMouseMove={handleMouseMove}
-        style={{ background: "transparent" }}
+        style={{ background: "#022A30" }}
       />
     </div>
   );
